@@ -1,4 +1,4 @@
-using Firebase.Database;
+﻿using Firebase.Database;
 using Newtonsoft.Json;
 using PimDeWitte.UnityMainThreadDispatcher;
 using System.Collections.Generic;
@@ -15,12 +15,14 @@ public class InventoryManager : MonoBehaviour
     [SerializeField] string databaseUrl = "https://myproject-9d063-default-rtdb.asia-southeast1.firebasedatabase.app/";
 
     [Header("UI")]
-    [SerializeField] Text PotionCountText;
-    [SerializeField] Text BombCountText;
-    [SerializeField] Text TicketCountText;
+    [SerializeField] Text DiamondCountText;
+    [SerializeField] Text IronCountText;
+    [SerializeField] Text GoldCountText;
     [SerializeField] Text MessageText;
 
     string userKey;
+
+    public Dictionary<string, int> Inventory => inventory;
     Dictionary<string, int> inventory = new Dictionary<string, int>();
 
     void Start()
@@ -33,7 +35,7 @@ public class InventoryManager : MonoBehaviour
 
         if (string.IsNullOrEmpty(userKey))
         {
-            MessageText.text = "로그인 정보가 없습니다.";
+            UpdateMessageText("로그인 정보가 없습니다.");
             return;
         }
 
@@ -53,7 +55,7 @@ public class InventoryManager : MonoBehaviour
                 {
                     dispatcher.Enqueue(() =>
                     {
-                        MessageText.text = "인벤토리 불러오기 실패";
+                        UpdateMessageText("인벤토리 불러오기 실패");
                     });
                     return;
                 }
@@ -64,7 +66,7 @@ public class InventoryManager : MonoBehaviour
                 {
                     dispatcher.Enqueue(() =>
                     {
-                        MessageText.text = "인벤토리 데이터가 없습니다.";
+                        UpdateMessageText("인벤토리 데이터가 없습니다.");
                     });
                     return;
                 }
@@ -75,16 +77,21 @@ public class InventoryManager : MonoBehaviour
                 dispatcher.Enqueue(() =>
                 {
                     RefreshUI();
-                    MessageText.text = "인벤토리 불러오기 완료";
+                    UpdateMessageText("인벤토리 불러오기 완료");
                 });
             });
     }
 
+    void UpdateMessageText(string message)
+    {
+        MessageText.text += message + "\n";
+    }
+
     void RefreshUI()
     {
-        PotionCountText.text = "Potion : " + GetItemCount("Potion");
-        BombCountText.text = "Bomb : " + GetItemCount("Bomb");
-        TicketCountText.text = "Ticket : " + GetItemCount("Ticket");
+        DiamondCountText.text = "Diamond : " + GetItemCount("Diamond");
+        IronCountText.text = "Iron : " + GetItemCount("Iron");
+        GoldCountText.text = "Gold : " + GetItemCount("Gold");
     }
 
     int GetItemCount(string itemName)
@@ -96,27 +103,30 @@ public class InventoryManager : MonoBehaviour
 
         return 0;
     }
-
-    public void OnClickUsePotion()
+    public void AddItem(string itemName)
     {
-        UseItem("Potion");
-    }
+        if (inventory.ContainsKey(itemName))
+        {
+            inventory[itemName]++;
+        }
+        else
+        {
+            inventory[itemName] = 1;
+        }
 
-    public void OnClickUseBomb()
-    {
-        UseItem("Bomb");
+        RefreshUI();
     }
+    public void OnClickUseDiamond() => UseItem("Diamond");
 
-    public void OnClickUseTicket()
-    {
-        UseItem("Ticket");
-    }
+    public void OnClickUseIron() => UseItem("Iron");
+
+    public void OnClickUseGold() => UseItem("Gold");
 
     void UseItem(string itemName)
     {
         if (!inventory.ContainsKey(itemName) || inventory[itemName] <= 0)
         {
-            MessageText.text = itemName + " 개수가 부족합니다.";
+            UpdateMessageText(itemName + " 개수가 부족합니다.");
             return;
         }
 
@@ -139,7 +149,7 @@ public class InventoryManager : MonoBehaviour
                 {
                     dispatcher.Enqueue(() =>
                     {
-                        MessageText.text = "인벤토리 저장 실패";
+                        UpdateMessageText("인벤토리 저장 실패");
                     });
                     return;
                 }
@@ -147,7 +157,7 @@ public class InventoryManager : MonoBehaviour
                 dispatcher.Enqueue(() =>
                 {
                     RefreshUI();
-                    MessageText.text = usedItemName + " 사용 완료";
+                    UpdateMessageText(usedItemName + " 사용 완료");
                 });
             });
     }

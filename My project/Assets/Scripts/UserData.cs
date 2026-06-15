@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
 [System.Serializable]
@@ -32,9 +32,9 @@ public class UserData
         }
 
         Dictionary<string, int> inventory = new Dictionary<string, int>();
-        inventory["Potion"] = 0;
-        inventory["Bomb"] = 0;
-        inventory["Ticket"] = 0;
+        inventory["Diamond"] = 0;   //다이아몬드 - Diamond
+        inventory["Iron"] = 0;     //철 - Iron
+        inventory["Gold"] = 0;   //금 - Gold
 
         UnitList = JsonConvert.SerializeObject(unitList);
         Inventory = JsonConvert.SerializeObject(inventory);

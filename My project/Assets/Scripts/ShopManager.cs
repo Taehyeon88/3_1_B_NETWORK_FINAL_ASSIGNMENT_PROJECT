@@ -1,4 +1,4 @@
-using Firebase.Database;
+﻿using Firebase.Database;
 using Newtonsoft.Json;
 using PimDeWitte.UnityMainThreadDispatcher;
 using System.Collections.Generic;
@@ -20,19 +20,21 @@ public class ShopManager : MonoBehaviour
 
     string userKey;
     int currentCoin;
-    Dictionary<string, int> inventory = new Dictionary<string, int>();
+
+    private InventoryManager inventoryManager;
 
     void Start()
     {
         database = FirebaseDatabase.GetInstance(databaseUrl);
         reference = database.RootReference;
         dispatcher = UnityMainThreadDispatcher.Instance();
+        inventoryManager = gameObject.GetComponent<InventoryManager>();
 
         userKey = PlayerPrefs.GetString("UserKey");
 
         if (string.IsNullOrEmpty(userKey))
         {
-            MessageText.text = "로그인 정보가 없습니다.";
+            UpdateMessageText("로그인 정보가 없습니다.");
             return;
         }
 
@@ -51,7 +53,7 @@ public class ShopManager : MonoBehaviour
                 {
                     dispatcher.Enqueue(() =>
                     {
-                        MessageText.text = "유저 정보 불러오기 실패";
+                        UpdateMessageText("유저 정보 불러오기 실패");
                     });
                     return;
                 }
@@ -60,62 +62,57 @@ public class ShopManager : MonoBehaviour
 
                 currentCoin = int.Parse(snapshot.Child("Coin").Value.ToString());
 
-                string inventoryJson = snapshot.Child("Inventory").Value.ToString();
-                inventory = JsonConvert.DeserializeObject<Dictionary<string, int>>(inventoryJson);
-
                 dispatcher.Enqueue(() =>
                 {
                     RefreshUI();
-                    MessageText.text = "유저 정보 불러오기 완료";
+                    UpdateMessageText("유저 정보 불러오기 완료");
                 });
             });
     }
 
+    void UpdateMessageText(string message)
+    {
+        MessageText.text += message + "\n";
+    }
+
     void RefreshUI()
     {
-        CoinText.text = "Coin : " + currentCoin;
+        CoinText.text = currentCoin.ToString();
     }
 
-    public void OnClickBuyPotion()
+    public void OnClickBuyDiamond()
     {
-        BuyItem("Potion", 100);
+        BuyItem("Diamond", 200);
     }
 
-    public void OnClickBuyBomb()
+    public void OnClickBuyIron()
     {
-        BuyItem("Bomb", 200);
+        BuyItem("Iron", 50);
     }
 
-    public void OnClickBuyTicket()
+    public void OnClickBuyGold()
     {
-        BuyItem("Ticket", 300);
+        BuyItem("Gold", 150);
     }
 
     void BuyItem(string itemName, int price)
     {
         if (currentCoin < price)
         {
-            MessageText.text = "코인이 부족합니다.";
+            UpdateMessageText("코인이 부족합니다.");
             return;
         }
 
         currentCoin -= price;
 
-        if (inventory.ContainsKey(itemName))
-        {
-            inventory[itemName]++;
-        }
-        else
-        {
-            inventory[itemName] = 1;
-        }
+        inventoryManager.AddItem(itemName);  //인벤토리에 아이템 추가
 
         SaveUserData(itemName);
     }
 
     void SaveUserData(string boughtItemName)
     {
-        string inventoryJson = JsonConvert.SerializeObject(inventory);
+        string inventoryJson = JsonConvert.SerializeObject(inventoryManager.Inventory);
 
         Dictionary<string, object> updateData = new Dictionary<string, object>();
         updateData["Coin"] = currentCoin;
@@ -131,7 +128,7 @@ public class ShopManager : MonoBehaviour
                 {
                     dispatcher.Enqueue(() =>
                     {
-                        MessageText.text = "구매 저장 실패";
+                        UpdateMessageText("구매 저장 실패");
                     });
                     return;
                 }
@@ -139,7 +136,7 @@ public class ShopManager : MonoBehaviour
                 dispatcher.Enqueue(() =>
                 {
                     RefreshUI();
-                    MessageText.text = boughtItemName + " 구매 완료";
+                    UpdateMessageText(boughtItemName + " 구매 완료");
                 });
             });
     }

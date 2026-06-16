@@ -19,6 +19,8 @@ public class ShopManager : MonoBehaviour
     [SerializeField] Text MessageText;
 
     string userKey;
+
+    public int CurrentCoin => currentCoin;
     int currentCoin;
 
     private InventoryManager inventoryManager;
@@ -94,12 +96,22 @@ public class ShopManager : MonoBehaviour
     {
         BuyItem("Gold", 150);
     }
+    public void UseCoin(int price)
+    {
+        currentCoin -= price;
+        RefreshUI();
+    }
+    public void AddCoin(int price)
+    {
+        currentCoin += price;
+        RefreshUI();
+    }
 
     void BuyItem(string itemName, int price)
     {
         if (currentCoin < price)
         {
-            UpdateMessageText("코인이 부족합니다.");
+            UpdateMessageText($"아이템_{itemName} 구매 코인이 부족합니다.");
             return;
         }
 

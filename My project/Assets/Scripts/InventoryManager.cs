@@ -111,7 +111,20 @@ public class InventoryManager : MonoBehaviour
         }
         else
         {
-            inventory[itemName] = 1;
+            inventory[itemName] = 0;
+        }
+
+        RefreshUI();
+    }
+    public void RemoveItem(string itemName)
+    {
+        if (inventory.ContainsKey(itemName))
+        {
+            inventory[itemName] = Mathf.Max(0, inventory[itemName] - 1);
+        }
+        else
+        {
+            inventory[itemName] = 0;
         }
 
         RefreshUI();

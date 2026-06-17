@@ -16,7 +16,6 @@ public class UnitManager : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] Text UnitListText;
-    [SerializeField] Text MessageText;
 
     string userKey;
     Dictionary<string, bool> unitList = new Dictionary<string, bool>();
@@ -82,10 +81,7 @@ public class UnitManager : MonoBehaviour
         }
     }
 
-    void UpdateMessageText(string message)
-    {
-        MessageText.text += message + "\n";
-    }
+    void UpdateMessageText(string message) => MessageManager.Instance.UpdateMessageText(message);
 
     public void BuyUnit1() => BuyUnit(1, 100);
     public void BuyUnit2() => BuyUnit(2, 150);

@@ -18,7 +18,6 @@ public class InventoryManager : MonoBehaviour
     [SerializeField] Text DiamondCountText;
     [SerializeField] Text IronCountText;
     [SerializeField] Text GoldCountText;
-    [SerializeField] Text MessageText;
 
     string userKey;
 
@@ -82,10 +81,7 @@ public class InventoryManager : MonoBehaviour
             });
     }
 
-    void UpdateMessageText(string message)
-    {
-        MessageText.text += message + "\n";
-    }
+    void UpdateMessageText(string message) => MessageManager.Instance.UpdateMessageText(message);
 
     void RefreshUI()
     {

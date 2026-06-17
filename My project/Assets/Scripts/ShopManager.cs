@@ -16,7 +16,6 @@ public class ShopManager : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] Text CoinText;
-    [SerializeField] Text MessageText;
 
     string userKey;
 
@@ -72,10 +71,7 @@ public class ShopManager : MonoBehaviour
             });
     }
 
-    void UpdateMessageText(string message)
-    {
-        MessageText.text += message + "\n";
-    }
+    void UpdateMessageText(string message) => MessageManager.Instance.UpdateMessageText(message);
 
     void RefreshUI()
     {

@@ -18,13 +18,11 @@ public class AuctionManager : MonoBehaviour
     [SerializeField] Text DiamondCountText;
     [SerializeField] Text IronCountText;
     [SerializeField] Text GoldCountText;
-    [SerializeField] Text MessageText;
     [SerializeField] Transform AuctionCanvas;
 
     const string auctionName = "MainAuction";
 
     string userKey;
-    string auctionKey;
     ShopManager shopManager;
     InventoryManager inventoryManager;
 
@@ -43,16 +41,13 @@ public class AuctionManager : MonoBehaviour
 
         if (string.IsNullOrEmpty(userKey))
         {
-            UpdateMessageText("Auction시스템 : 로그인 정보가 없습니다.");
+            UpdateMessageText("[경매장] Auction시스템 : 로그인 정보가 없습니다.");
             return;
         }
 
         LoadAuction();
     }
-    void UpdateMessageText(string message)
-    {
-        MessageText.text += message + "\n";
-    }
+    void UpdateMessageText(string message) => MessageManager.Instance.UpdateMessageText(message);
 
     //경매장 아이템 UI 갱신 함수
     void RefreshUI()
@@ -94,7 +89,7 @@ public class AuctionManager : MonoBehaviour
     {
         if (shopManager.CurrentCoin < price)
         {
-            UpdateMessageText($"아이템_{itemName} 구매 코인이 부족합니다.");
+            UpdateMessageText($"[경매장] 아이템_{itemName} 구매 코인이 부족합니다.");
             return;
         }
 
@@ -103,7 +98,7 @@ public class AuctionManager : MonoBehaviour
             int count = items[itemName];
             if (count <= 0)
             {
-                UpdateMessageText($"경매장에 아이템_{itemName} 재고가 없습니다.");
+                UpdateMessageText($"[경매장] 경매장에 아이템_{itemName} 재고가 없습니다.");
                 return;
             }
         }
@@ -126,7 +121,7 @@ public class AuctionManager : MonoBehaviour
             int count = inventoryManager.Inventory[itemName];
             if (count <= 0)
             {
-                UpdateMessageText($"아이템_{itemName} 개수가 부족합니다.");
+                UpdateMessageText($"[경매장] 아이템_{itemName} 개수가 부족합니다.");
                 return;
             }
         }
@@ -163,7 +158,7 @@ public class AuctionManager : MonoBehaviour
                     dispatcher.Enqueue(() =>
                     {
                         string text = isBuying ? "구매 저장 실패" : "판매 저장 실패";
-                        UpdateMessageText(text);
+                        UpdateMessageText("[경매장] " + text);
                     });
                     return;
                 }
@@ -172,7 +167,7 @@ public class AuctionManager : MonoBehaviour
                 {
                     RefreshUI();
                     string text = isBuying ? "구매 완료" : "판매 완료";
-                    UpdateMessageText(boughtItemName + text);
+                    UpdateMessageText("[경매장] " + boughtItemName + text);
                 });
             });
     }
@@ -184,7 +179,6 @@ public class AuctionManager : MonoBehaviour
 
         reference
             .Child("AuctionInfo")
-            .Child(auctionKey)
             .Child("Items")
             .SetValueAsync(itemsJson)
             .ContinueWith(task =>
@@ -193,7 +187,7 @@ public class AuctionManager : MonoBehaviour
                 {
                     dispatcher.Enqueue(() =>
                     {
-                        UpdateMessageText("경매장 아이템 저장 실패");
+                        UpdateMessageText("[경매장] 아이템 저장 실패");
                     });
                     return;
                 }
@@ -201,7 +195,7 @@ public class AuctionManager : MonoBehaviour
                 dispatcher.Enqueue(() =>
                 {
                     RefreshUI();
-                    UpdateMessageText("경매장 아이템 저장 성공");
+                    UpdateMessageText("[경매장] 아이템 저장 성공");
                 });
             });
     }
@@ -212,8 +206,6 @@ public class AuctionManager : MonoBehaviour
     {
         reference
             .Child("AuctionInfo")
-            .OrderByChild("AuctionName")
-            .EqualTo(auctionName)
             .GetValueAsync()
             .ContinueWith(task =>
             {
@@ -221,7 +213,7 @@ public class AuctionManager : MonoBehaviour
                 {
                     dispatcher.Enqueue(() =>
                     {
-                        UpdateMessageText("경매 정보 로드 실패");
+                        UpdateMessageText("[경매장] 정보 로드 실패");
                     });
                     return;
                 }
@@ -236,24 +228,7 @@ public class AuctionManager : MonoBehaviour
                     return;
                 }
 
-                foreach (var auction_snapshot in snapshot.Children)
-                {
-                    dispatcher.Enqueue(() =>
-                    {
-                        auctionKey = auction_snapshot.Key;
-                        Debug.Log(auctionKey);
-
-                        PlayerPrefs.SetString("AuctionName", auctionName);
-                        PlayerPrefs.SetString("AuctionKey", auctionKey);
-                        PlayerPrefs.Save();
-
-                        UpdateMessageText("경매장 데이터 로드 성공");
-
-                        LoadAuctionItemData();
-                    });
-
-                    break;
-                }
+                LoadAuctionItemData();
             });
 
     }
@@ -262,31 +237,23 @@ public class AuctionManager : MonoBehaviour
     //Firebase 경매장 데이터 생성
     void CreateAuction()
     {
-        DatabaseReference auctionRef = reference.Child("AuctionInfo").Push();
-        auctionKey = auctionRef.Key;
-
         AuctionData auctionData = new AuctionData(auctionName);
         string json = JsonUtility.ToJson(auctionData);
 
-        auctionRef.SetRawJsonValueAsync(json).ContinueWith(task =>
+        reference.Child("AuctionInfo").SetRawJsonValueAsync(json).ContinueWith(task =>
         {
             if (task.IsFaulted)
             {
                 dispatcher.Enqueue(() =>
                 {
-                    UpdateMessageText("경매장 데이터 생성 실패");
+                    UpdateMessageText("[경매장] 데이터 생성 실패");
                 });
                 return;
             }
 
             dispatcher.Enqueue(() =>
             {
-                PlayerPrefs.SetString("AuctionName", auctionName);
-                PlayerPrefs.SetString("AuctionKey", auctionKey);
-                PlayerPrefs.Save();
-
-                UpdateMessageText("경매장 데이터 생성 성공");
-
+                UpdateMessageText("[경매장] 데이터 생성 성공");
                 LoadAuctionItemData();
             });
         });
@@ -297,7 +264,6 @@ public class AuctionManager : MonoBehaviour
     {
         reference
             .Child("AuctionInfo")
-            .Child(auctionKey)
             .Child("Items")
             .GetValueAsync()
             .ContinueWith(task =>
@@ -306,7 +272,7 @@ public class AuctionManager : MonoBehaviour
                 {
                     dispatcher.Enqueue(() =>
                     {
-                        UpdateMessageText("경매장 아이템 로드 실패");
+                        UpdateMessageText("[경매장] 아이템 로드 실패");
                     });
                     return;
                 }
@@ -318,7 +284,7 @@ public class AuctionManager : MonoBehaviour
                 dispatcher.Enqueue(() =>
                 {
                     RefreshUI();
-                    UpdateMessageText("경매장 아이템 로드 성공");
+                    UpdateMessageText("[경매장] 아이템 로드 성공");
                 });
             });
     }

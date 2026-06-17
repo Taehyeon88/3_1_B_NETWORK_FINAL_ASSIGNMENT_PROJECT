@@ -16,7 +16,6 @@ public class RewardManager : MonoBehaviour
     [Header("UI")]
     [SerializeField] Text MyScoreText;
     [SerializeField] Text ScoreText;
-    [SerializeField] Text MessageText;
     [SerializeField] Transform RewardCanvas;
 
     int my_score;
@@ -77,10 +76,7 @@ public class RewardManager : MonoBehaviour
         ScoreText.text = "Score:" + (current_score <= 0? " - " : current_score);
     }
 
-    void UpdateMessageText(string message)
-    {
-        MessageText.text += message + "\n";
-    }
+    void UpdateMessageText(string message) => MessageManager.Instance.UpdateMessageText(message);
 
     public void ShowRewardUI()
     {
